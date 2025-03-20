@@ -1,9 +1,10 @@
 import os, math, random
-os.environ['SDL_VIDEO_WINDOW_POS'] = "100,0"
+os.environ['SDL_VIDEO_WINDOW_POS'] = "100,10"
 from pgzero.actor import Actor
 from time import sleep as wait
 import pgzrun
 music.set_volume(0.6)
+mode = "game"
 WIDTH = 1200
 HEIGHT = 800
 TITLE = "KABOOM"
@@ -28,6 +29,7 @@ firesleft = Actor('s1')
 firesleft.midbottom = (50, 670)
 lifedisplay = Actor('life', (50, 700))
 ground = []
+starterpos = []
 bullets = []
 fires = []
 coli = Actor("player", player.pos)
@@ -44,13 +46,16 @@ for i in range(20):
     randomx = lastx + random.choice([-200, 200])
     randomy = lasty + random.choice([-200, 200])
     step = Actor("step", (randomx, randomy))
+    soup = step.pos
     step.z = lastz + random.choice([-1, 1])
     if step.z == 0:
         step.z += 2
     lastx = step.x
     lasty = step.y
-    lastz = step.z
+    lastz = step.z    
     ground.append(step)
+for actor in ground:
+    actor.start = actor.pos
 def addfire(times):
     for i in range(times):
         fire = Actor("s1", (random.randint(-1000, 1000), random.randint(-1000, 1000)))
@@ -73,6 +78,7 @@ def addwatir():
         if watir.collidelist(ground) != -1:
             while watir.collidelist(ground) != -1:
                 watir.pos = (random.randint(-100, 100), random.randint(-100, 100))
+        watir.start = watir.pos
         ground.append(watir) 
         sounds.rain.play()
         rain.y = -1200
@@ -91,33 +97,36 @@ def moveindirection(actor, angle, amount):
 def draw():
     global WIDTH
     screen.fill("#858585") #game
-    for i in range(len(ground)):
-        ground[i].draw()
-    for i in range(len(bullets)):
-        bullets[i].draw()
-    for i in range(len(fires)):
-        fires[i].draw()
-        screen.draw.text(str(fires[i].z), center=(fires[i].pos), color='orange')
-    gun.draw()
-    player.draw()
-    rain.draw()
-    screen.draw.filled_rect(Rect(800, 0, 600, 600), "#858585")
-    screen.draw.filled_rect(Rect(800, 0, 10, 600), "black") #height
-    screen.draw.filled_rect(Rect(810, (500 - (player.z * 50)), 200, (100 + (player.z * 50))), "white")
-    screen.draw.text("HEIGHT:" + str(player.z), fontsize=40, center=(900, 550), color="black")
-    heightdisplay.draw()
-    heightdisplay.y = 400 - (player.z * 50)
-    screen.draw.filled_rect(Rect(1010, (500 - (sensor.z * 50)), 200, (100 + (sensor.z * 50))), "grey")
-    screen.draw.text("HEIGHT:" + str(sensor.z), fontsize=40, center=(1100, 550), color="black")
-    screen.draw.filled_rect(Rect(0, 600, 1200, 10), "black")#hud
-    screen.draw.filled_rect(Rect(0, 610, 1200, 500), "#858585")
-    status.draw()
-    waterdisplay.draw()
-    firesleft.draw()
-    screen.draw.text(str(ammo), midleft=(100, waterdisplay.y), fontsize = 40, color='black')
-    lifedisplay.draw()
-    screen.draw.text(str(life), midleft=(100, lifedisplay.y), fontsize = 40, color='black')
-    screen.draw.text(str(len(fires)), midleft=(100, firesleft.y), fontsize = 40, color='black')
+    if mode == "game":
+        for i in range(len(ground)):
+            ground[i].draw()
+        for i in range(len(bullets)):
+            bullets[i].draw()
+        for i in range(len(fires)):
+            fires[i].draw()
+            screen.draw.text(str(fires[i].z), center=(fires[i].pos), color='orange')
+        gun.draw()
+        player.draw()
+        rain.draw()
+        screen.draw.filled_rect(Rect(800, 0, 600, 600), "#858585")
+        screen.draw.filled_rect(Rect(800, 0, 10, 600), "black") #height
+        screen.draw.filled_rect(Rect(810, (500 - (player.z * 50)), 200, (100 + (player.z * 50))), "white")
+        screen.draw.text("HEIGHT:" + str(player.z), fontsize=40, center=(900, 550), color="black")
+        heightdisplay.draw()
+        heightdisplay.y = 400 - (player.z * 50)
+        screen.draw.filled_rect(Rect(1010, (500 - (sensor.z * 50)), 200, (100 + (sensor.z * 50))), "grey")
+        screen.draw.text("HEIGHT:" + str(sensor.z), fontsize=40, center=(1100, 550), color="black")
+        screen.draw.filled_rect(Rect(0, 600, 1200, 10), "black")#hud
+        screen.draw.filled_rect(Rect(0, 610, 1200, 500), "#858585")
+        status.draw()
+        waterdisplay.draw()
+        firesleft.draw()
+        screen.draw.text(str(ammo), midleft=(100, waterdisplay.y), fontsize = 40, color='black')
+        lifedisplay.draw()
+        screen.draw.text(str(life), midleft=(100, lifedisplay.y), fontsize = 40, color='black')
+        screen.draw.text(str(len(fires)), midleft=(100, firesleft.y), fontsize = 40, color='black')
+    else:
+        screen.draw.text("GAME OVER Apreta R para reiniciar", center=(600, 400), fontsize=50, color="red")
 def shoot(tipo, sonido, offset):
     drop = Actor(tipo, gun.pos)
     sonido()
@@ -143,10 +152,29 @@ def playerlogic():
         ammo += 25
         sounds.recharge.play()
     if keyboard.A:
-        player.angle += 5
+        player.angle = 180
+        coli.x = player.x - math.cos(math.radians(player.angle + 0)) * -10
+        coli.y = player.y + math.sin(math.radians(player.angle + 0)) * -10
+        if coli.collidelist(ground) == -1 or ground[coli.collidelist(ground)].z - player.z <= 1:
+            for i in range(len(ground)):
+                moveindirection(ground[i], player.angle, 5)
+            for i in range(len(bullets)):
+                moveindirection(bullets[i], player.angle, 5)
+            for i in range(len(fires)):
+                moveindirection(fires[i], player.angle, 5)
     elif keyboard.D:
-        player.angle -= 5
+        player.angle = 0
+        coli.x = player.x - math.cos(math.radians(player.angle + 0)) * -10
+        coli.y = player.y + math.sin(math.radians(player.angle + 0)) * -10
+        if coli.collidelist(ground) == -1 or ground[coli.collidelist(ground)].z - player.z <= 1:
+            for i in range(len(ground)):
+                moveindirection(ground[i], player.angle, 5)
+            for i in range(len(bullets)):
+                moveindirection(bullets[i], player.angle, 5)
+            for i in range(len(fires)):
+                moveindirection(fires[i], player.angle, 5)
     if keyboard.W:
+        player.angle = 90
         coli.x = player.x - math.cos(math.radians(player.angle + 0)) * -10
         coli.y = player.y + math.sin(math.radians(player.angle + 0)) * -10
         if coli.collidelist(ground) == -1 or ground[coli.collidelist(ground)].z - player.z <= 1:
@@ -157,15 +185,16 @@ def playerlogic():
             for i in range(len(fires)):
                 moveindirection(fires[i], player.angle, 5)
     elif keyboard.S:
-        coli.x = player.x - math.cos(math.radians(player.angle + 0)) * 10
-        coli.y = player.y + math.sin(math.radians(player.angle + 0)) * 10
+        player.angle = -90
+        coli.x = player.x - math.cos(math.radians(player.angle + 0)) * -10
+        coli.y = player.y + math.sin(math.radians(player.angle + 0)) * -10
         if coli.collidelist(ground) == -1 or ground[coli.collidelist(ground)].z - player.z <= 1:
             for i in range(len(ground)):
-               moveindirection(ground[i], player.angle, -5)
+                moveindirection(ground[i], player.angle, 5)
             for i in range(len(bullets)):
-                moveindirection(bullets[i], player.angle, -5)
+                moveindirection(bullets[i], player.angle, 5)
             for i in range(len(fires)):
-                moveindirection(fires[i], player.angle, -5)
+                moveindirection(fires[i], player.angle, 5)
     if keyboard.RIGHT:
         gun.angle -= 5
     elif keyboard.LEFT:
@@ -238,44 +267,58 @@ def on_mouse_move(pos):
     angle = math.degrees(math.atan2(-(pos[1] - gun.y), pos[0] - gun.x + 0))
     gun.angle = (angle + 180) % 360
 def update():
-    global FPS, life, lastlife
-    playerlogic()
-    bulletslogic()
-    firelogic()
-    if abs(gun.angle) == 360:
-        gun.angle = 0     
-    rain.y += 25
-    if abs(gun.angle) == 180:
-        gun.angle = 180
-    sensor.pos = player.pos
-    for i in range(10):
-        sensor.x += math.cos(math.radians(player.angle + 0)) * 10
-        sensor.y -= math.sin(math.radians(player.angle + 0)) * 10
-        if sensor.collidelist(ground) != -1:
-            break
-    if lastlife != life:
-        status.image = 'dmg'
-        status.timer = 0
-        sounds.dmg.play()
-    lastlife = life
-    if status.timer > .5:
-        if life > 20:
-            status.image = 'player status'
-        else:
-            status.image = 'lowhp'
-    status.timer += 1 /60
-    status.beep += 1 / 60
-    if player.collidelist(fires) != -1:
-        moveindirection(fires[player.collidelist(fires)], fires[player.collidelist(fires)].semiangle, 200)
-        life -= 10
-    if life <= 0:
-        exit()
-    if life <= 20 and status.beep >= 1:
-        sounds.tone.play()
-        status.beep = 0
+    global FPS, life, lastlife, mode, fires
+    if mode == "game":
+        playerlogic()
+        bulletslogic()
+        firelogic()
+        if abs(gun.angle) == 360:
+            gun.angle = 0     
+        rain.y += 25
+        if abs(gun.angle) == 180:
+            gun.angle = 180
+        sensor.pos = player.pos
+        for i in range(10):
+            sensor.x += math.cos(math.radians(player.angle + 0)) * 10
+            sensor.y -= math.sin(math.radians(player.angle + 0)) * 10
+            if sensor.collidelist(ground) != -1:
+                
+                break
+        if lastlife != life:
+            status.image = 'dmg'
+            status.timer = 0
+            sounds.dmg.play()
+        lastlife = life
+        if status.timer > .5:
+            if life > 20:
+                status.image = 'player status'
+            else:
+                status.image = 'lowhp'
+        status.timer += 1 /60
+        status.beep += 1 / 60
+        if player.collidelist(fires) != -1:
+            moveindirection(fires[player.collidelist(fires)], fires[player.collidelist(fires)].semiangle, 200)
+            life -= 10
+        if life <= 0:
+            mode = 2
+        if life <= 20 and status.beep >= 1:
+            sounds.tone.play()
+            status.beep = 0
+    else:
+        if keyboard.R:
+            for i in range(len(ground)):
+                ground[i - 1].pos = ground[i - 1].start
+            fires = []
+            bullets = []
+            rounds = 1
+            life = 100
+            ammo = 100
+            addfire((rounds * 2) -1)
+            mode = "game"
 sounds.start.play()
-wait(5.7)
-music.play('game.wav')
-addwatir()
+
+def musicplay():
+    music.play("game.wav")
+clock.schedule_unique(musicplay, 5.7)
 clock.schedule_interval(addwatir, 10)
 pgzrun.go()
