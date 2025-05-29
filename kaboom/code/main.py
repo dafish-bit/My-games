@@ -3,10 +3,10 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "100,10"
 from pgzero.actor import Actor
 from time import sleep as wait
 import pgzrun
-music.set_volume(0.6)
+music.set_volume(0.1)
 mode = "game"
 WIDTH = 1200
-HEIGHT = 800
+HEIGHT = 699
 TITLE = "KABOOM"
 life = 100
 ammo = 100
@@ -19,15 +19,14 @@ sensor = Actor("player", (400, 300))
 sensor.z = 0
 status = Actor("player status")
 status.x = WIDTH / 2
-status.bottom = 750
+status.bottom = 710
 status.timer = 0
 status.beep = 0
 heightdisplay = Actor("placeholder", (900, 400))
-waterdisplay = Actor('wotor', (50, 750))
+waterdisplay = Actor('wotor', (300, 650))
 waterdisplay.angle -= 90
-firesleft = Actor('s1')
-firesleft.midbottom = (50, 670)
-lifedisplay = Actor('life', (50, 700))
+firesleft = Actor('s1', (50, 650))
+lifedisplay = Actor('life', (175, 650))
 ground = []
 starterpos = []
 bullets = []
@@ -42,7 +41,7 @@ lasty = step.y
 lastz = step.z
 ground.append(step)
 lastlife = None
-for i in range(20):
+for i in range(25):
     randomx = lastx + random.choice([-200, 200])
     randomy = lasty + random.choice([-200, 200])
     step = Actor("step", (randomx, randomy))
@@ -73,7 +72,7 @@ def addfire(times):
         fires.append(fire)
 def addwatir():
     for i in range((round(1 + rounds / 3))): 
-        watir = Actor('watir', (random.randint(-100, 100), random.randint(-100, 100)))
+        watir = Actor('watir', (random.randint(-100, 1300), random.randint(-100, 800)))
         watir.z = 0
         if watir.collidelist(ground) != -1:
             while watir.collidelist(ground) != -1:
@@ -122,10 +121,10 @@ def draw():
         status.draw()
         waterdisplay.draw()
         firesleft.draw()
-        screen.draw.text(str(ammo), midleft=(100, waterdisplay.y), fontsize = 40, color='black')
+        screen.draw.text(str(ammo), midleft=(waterdisplay.x + 50, waterdisplay.y), fontsize = 40, color='black')
         lifedisplay.draw()
-        screen.draw.text(str(life), midleft=(100, lifedisplay.y), fontsize = 40, color='black')
-        screen.draw.text(str(len(fires)), midleft=(100, firesleft.y), fontsize = 40, color='black')
+        screen.draw.text(str(life), midleft=(lifedisplay.x + 50, lifedisplay.y), fontsize = 40, color='black')
+        screen.draw.text(str(len(fires)), midleft=(firesleft.x + 50, firesleft.y), fontsize = 40, color='black')
     else:
         screen.draw.text("GAME OVER Apreta R para reiniciar", center=(600, 400), fontsize=50, color="red")
 def shoot(tipo, sonido, offset):
@@ -310,10 +309,11 @@ def update():
             ammo = 100
             addfire((rounds * 2) -1)
             mode = "game"
-sounds.start.play()
+#sounds.start.play()
 
 def musicplay():
     music.play("game.wav")
 clock.schedule_unique(musicplay, 5.7)
 clock.schedule_interval(addwatir, 10)
+
 pgzrun.go()
