@@ -116,6 +116,7 @@ def draw():
         heightdisplay.y = 400 - (player.z * 50)
         screen.draw.filled_rect(Rect(1010, (500 - (sensor.z * 50)), 200, (100 + (sensor.z * 50))), "grey")
         screen.draw.text("HEIGHT:" + str(sensor.z), fontsize=40, center=(1100, 550), color="black")
+        screen.blit("pointer", (1010, 300 - (sensor.z * 50)))
         screen.draw.filled_rect(Rect(0, 600, 1200, 10), "black")#hud
         screen.draw.filled_rect(Rect(0, 610, 1200, 500), "#858585")
         status.draw()
@@ -195,19 +196,13 @@ def playerlogic():
                 moveindirection(bullets[i], player.angle, 5)
             for i in range(len(fires)):
                 moveindirection(fires[i], player.angle, 5)
-    if keyboard.RIGHT:
-        gun.angle -= 5
-    elif keyboard.LEFT:
-        gun.angle += 5
+
     if player.collidelist(ground) != -1:
         if (ground[player.collidelist(ground)].z - player.z) <= 1:
             player.z = ground[player.collidelist(ground)].z
     else:
         player.z = 0
-    if sensor.collidelist(ground) != -1:
-        sensor.z = ground[sensor.collidelist(ground)].z
-    else:
-        sensor.z = 0
+
     if onvariablechange(player.z):
         sounds.footstep.play()
     oldvalue = player.z
@@ -266,6 +261,11 @@ def firelogic():
 def on_mouse_move(pos):
     angle = math.degrees(math.atan2(-(pos[1] - gun.y), pos[0] - gun.x + 0))
     gun.angle = (angle + 180) % 360
+    sensor.pos = pos
+    if sensor.collidelist(ground) != -1:
+        sensor.z = ground[sensor.collidelist(ground)].z
+    else:
+        sensor.z = 0
 def update():
     global FPS, life, lastlife, mode, fires
     if mode == "game":
@@ -278,12 +278,7 @@ def update():
         if abs(gun.angle) == 180:
             gun.angle = 180
         sensor.pos = player.pos
-        for i in range(10):
-            sensor.x += math.cos(math.radians(player.angle + 0)) * 10
-            sensor.y -= math.sin(math.radians(player.angle + 0)) * 10
-            if sensor.collidelist(ground) != -1:
-                
-                break
+
         if lastlife != life:
             status.image = 'dmg'
             status.timer = 0
