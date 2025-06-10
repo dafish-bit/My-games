@@ -3,7 +3,7 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "100,10"
 from pgzero.actor import Actor
 from time import sleep as wait
 import pgzrun
-music.set_volume(0.1)
+music.set_volume(0.6)
 mode = "game"
 WIDTH = 1200
 HEIGHT = 699
@@ -266,7 +266,7 @@ def on_mouse_move(pos):
     else:
         sensor.z = 0
 def update():
-    global FPS, life, lastlife, mode, fires
+    global FPS, life, lastlife, mode, fires, ammo, bullets
     if mode == "game":
         playerlogic()
         bulletslogic()
@@ -309,7 +309,7 @@ def update():
             ammo = 100
             addfire((rounds * 2) -1)
             mode = "game"
-#sounds.start.play()
+sounds.start.play()
 
 def musicplay():
     music.play("game.wav")
